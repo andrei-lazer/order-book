@@ -12,7 +12,7 @@ TradeVec OrderBook::placeOrder(OrderPtr order)
 	// OrderPtrList& orders;
 	OrderPtrList* p_orders;
 
-	if (order->getSide() == Side::BID)
+	if (order->getSide() == Side::Bid)
 	{
 		p_orders = &m_bids[order->getPrice()];
 	}
@@ -122,7 +122,7 @@ OrderBookLevels OrderBook::getLevels() const
 		ask_levels.push_back({price, quantity});
 	}
 
-	return OrderBookLevels(bid_levels, ask_levels);
+	return OrderBookLevels{bid_levels, ask_levels};
 }
 
 void OrderBook::deleteOrder(OrderId orderId)
@@ -132,11 +132,11 @@ void OrderBook::deleteOrder(OrderId orderId)
 		return;
 	}
 
-	const auto& [order, position] = m_orders.at(orderId);
+	const auto& [p_order, position] = m_orders.at(orderId);
 
-	Price price = order->getPrice();
+	Price price = p_order->getPrice();
 
-	if (order->getSide() == Side::BID)
+	if (p_order->getSide() == Side::Bid)
 	{
 		OrderPtrList& level_orders = m_bids.at(price);
 		// std::list::erase runs in constant time when given an iterator
@@ -155,3 +155,22 @@ void OrderBook::deleteOrder(OrderId orderId)
 	m_orders.erase(orderId);
 }
 
+void OrderBook::modifyOrder(OrderId orderId, Price newPrice, Quantity newQuantity, Side newSide)
+{
+	if (!m_orders.contains(orderId))
+		return;
+	
+	auto& [p_order, position] = m_orders.at(orderId);
+
+	Price price = p_order->getPrice();
+	Quantity quantity = p_order->getQuantity();
+	Side side = p_order->getSide();
+
+	// check if it loses priority
+	if ((newPrice != price) ||
+		(newSide != side) ||
+		(newQuantity > quantity))
+	{
+		deleteOrder(orderId);
+	}
+}

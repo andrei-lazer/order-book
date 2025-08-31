@@ -18,8 +18,14 @@ using OrderId = std::uint32_t;
 
 enum class Side
 {
-	BID,
-	ASK
+	Bid,
+	Ask
+};
+
+enum class OrderType
+{
+	Limit,
+	Market
 };
 
 class Order
@@ -28,8 +34,9 @@ class Order
 	Side m_side;
 	Price m_price;
 	Quantity m_quantity;
+	OrderType m_order_type;
 public:
-	Order(OrderId orderId, Side side, Price price, Quantity quantity);
+	Order(OrderId orderId, Side side, Price price, Quantity quantity, OrderType orderType);
 	OrderId getOrderId() const { return m_orderId; };
 	Side getSide() const { return m_side; };
 	Price getPrice() const { return m_price; };

@@ -2,13 +2,14 @@
 #include <memory>
 // #include "../src/Order.hpp"
 // #include "../src/Order.cpp"
+#include "Order.hpp"
 #include "OrderBook.hpp"
 
 // testing if placeOrder correctly adds a bid order
 TEST(OBTest, SimpleBid) {
 	OrderBook ob;
 
-	Order order(1, Side::BID, 12, 1);
+	Order order(1, Side::Bid, 12, 1, OrderType::Limit);
 	std::shared_ptr<Order> order_sp = std::make_shared<Order>(order);
 
 	ob.placeOrder(order_sp);
@@ -26,7 +27,7 @@ TEST(OBTest, SimpleBid) {
 TEST(OBTest, SimpleAsk) {
 	OrderBook ob;
 
-	Order order(1, Side::ASK, 12, 1);
+	Order order(1, Side::Ask, 12, 1, OrderType::Limit);
 	std::shared_ptr<Order> order_sp = std::make_shared<Order>(order);
 
 	ob.placeOrder(order_sp);
@@ -42,12 +43,12 @@ TEST(OBTest, SimpleAsk) {
 }
 
 
-TEST(OBTest, OneUnmatchedOrder)
+TEST(OBTest, UnmatchedOrder)
 {
 	OrderBook ob;
 
 	// place ask at 12
-	Order ask(1, Side::ASK, 14, 1);
+	Order ask(1, Side::Ask, 14, 1, OrderType::Limit);
 	std::shared_ptr<Order> ask_sp = std::make_shared<Order>(ask);
 
 	ob.placeOrder(ask_sp);
@@ -56,7 +57,7 @@ TEST(OBTest, OneUnmatchedOrder)
 	EXPECT_EQ(levels1.getAsks().size(), 1);
 
 	// place bid at 13
-	Order bid(2, Side::BID, 13, 1);
+	Order bid(2, Side::Bid, 13, 1, OrderType::Limit);
 	std::shared_ptr<Order> bid_sp = std::make_shared<Order>(bid);
 
 	TradeVec trades = ob.placeOrder(bid_sp);
@@ -69,12 +70,12 @@ TEST(OBTest, OneUnmatchedOrder)
 	EXPECT_EQ(trades.size(), 0);
 }
 
-TEST(OBTest, OneMatchedOrder)
+TEST(OBTest, MatchedOrder)
 {
 	OrderBook ob;
 
 	// place ask at 12
-	Order ask(1, Side::ASK, 12, 1);
+	Order ask(1, Side::Ask, 12, 1, OrderType::Limit);
 	std::shared_ptr<Order> ask_sp = std::make_shared<Order>(ask);
 
 	ob.placeOrder(ask_sp);
@@ -83,7 +84,7 @@ TEST(OBTest, OneMatchedOrder)
 	EXPECT_EQ(levels1.getAsks().size(), 1);
 
 	// place bid at 13
-	Order bid(2, Side::BID, 13, 1);
+	Order bid(2, Side::Bid, 13, 1, OrderType::Limit);
 	std::shared_ptr<Order> bid_sp = std::make_shared<Order>(bid);
 
 	TradeVec trades = ob.placeOrder(bid_sp);
@@ -103,7 +104,7 @@ TEST(OBTest, DeletedAsk)
 	OrderBook ob;
 
 	// place ask at 12
-	Order ask(1, Side::ASK, 12, 1);
+	Order ask(1, Side::Ask, 12, 1, OrderType::Limit);
 	std::shared_ptr<Order> ask_sp = std::make_shared<Order>(ask);
 
 	ob.placeOrder(ask_sp);

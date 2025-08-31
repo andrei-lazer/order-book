@@ -1,10 +1,10 @@
 #include "Order.hpp"
 #include <stdexcept>
 
-Order::Order(OrderId orderId, Side side, Price price, Quantity quantity) :
-	m_orderId(orderId), m_side(side), m_price(price), m_quantity(quantity)
-{
 
+Order::Order(OrderId orderId, Side side, Price price, Quantity quantity, OrderType orderType) :
+	m_orderId(orderId), m_side(side), m_price(price), m_quantity(quantity), m_order_type(orderType)
+{
 }
 
 void Order::fill(Quantity quantity)

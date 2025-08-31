@@ -7,12 +7,11 @@ set(CMAKE_BUILD_TYPE Debug)
 
 project(OrderBook)
 set(SOURCE_FILES
-	src/main.cpp
 	src/Order.cpp
 	src/OrderBook.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/main.cpp)
 
 # testing using Google Test
 
@@ -29,13 +28,10 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 set(TEST_FILES
 	tests/test_main.cpp
-	src/Order.cpp
-	src/OrderBook.cpp
 )
 
-
 set(TEST_NAME OrderBookTests)
-add_executable(${TEST_NAME} ${TEST_FILES})
+add_executable(${TEST_NAME} ${TEST_FILES} ${SOURCE_FILES})
 
 target_link_libraries(
   OrderBookTests

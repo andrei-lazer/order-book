@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Order.hpp"
-#include "Stuff.hpp"
+#include "Trade.hpp"
+#include "Levels.hpp"
+#include <thread>
+#include <mutex>
 
 class OrderBook
 {
@@ -20,11 +23,16 @@ class OrderBook
 	// unordered map to have easy access to orders by ID
 	std::unordered_map<OrderId, Entry> m_orders;
 
+	// concurrency stuff
+	std::mutex m_lock;
+	std::thread m_query_thread; // used to respond to user queries
+
 	TradeVec matchOrders();
 	void deleteLevelIfEmpty(Level level);
 
 public:
 	TradeVec placeOrder(OrderPtr order);
 	void deleteOrder(OrderId orderId);
+	void modifyOrder(OrderId orderId, Price newPrice, Quantity newQuantity, Side newSide);
 	OrderBookLevels getLevels() const;
 };

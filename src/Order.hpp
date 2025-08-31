@@ -1,5 +1,8 @@
+#pragma once
+
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <string>
 #include <memory>
@@ -11,12 +14,12 @@
 
 using Price = std::int32_t;
 using Quantity = std::uint32_t;
-using OrderId = std::string;
+using OrderId = std::uint32_t;
 
 enum class Side
 {
-	Buy,
-	Sell
+	BID,
+	ASK
 };
 
 class Order
@@ -31,24 +34,11 @@ public:
 	Side getSide() const { return m_side; };
 	Price getPrice() const { return m_price; };
 	Quantity getQuantity() const { return m_quantity; };
+	bool isEmpty() const { return getQuantity() == 0; }
 	void fill(Quantity quantity);
 };
 
-using pOrder = std::shared_ptr<Order>;
+// used for pointing to orders
+using OrderPtr = std::shared_ptr<Order>;
+using OrderPtrList = std::list<OrderPtr>;
 using OrderList = std::list<Order>;
-
-class Trade
-{
-
-};
-
-class OrderBook
-{
-	struct Entry
-	{
-		pOrder mp_order;
-		OrderList::iterator m_position;
-	};
-
-	std::map<Price, Entry, std::greater<Price>> bids;
-};

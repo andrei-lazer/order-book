@@ -17,4 +17,3 @@ void Order::fill(Quantity quantity)
 	m_quantity -= quantity;
 }
 
-

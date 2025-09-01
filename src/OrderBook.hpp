@@ -5,6 +5,8 @@
 #include "Levels.hpp"
 #include <thread>
 #include <mutex>
+#include "LockFreeFIFO.hpp"
+#include "Event.hpp"
 
 class OrderBook
 {
@@ -22,15 +24,14 @@ class OrderBook
 	std::map<Price, OrderPtrList, std::less<Price>> m_asks;
 	// unordered map to have easy access to orders by ID
 	std::unordered_map<OrderId, Entry> m_orders;
-
-	// concurrency stuff
-	std::mutex m_lock;
-	std::thread m_query_thread; // used to respond to user queries
+	
+	LockFreeFIFO<Event> level_loop;
 
 	TradeVec matchOrders();
 	void deleteLevelIfEmpty(Level level);
 
 public:
+	OrderBook();
 	TradeVec placeOrder(OrderPtr order);
 	void deleteOrder(OrderId orderId);
 	void modifyOrder(OrderId orderId, Price newPrice, Quantity newQuantity, Side newSide);

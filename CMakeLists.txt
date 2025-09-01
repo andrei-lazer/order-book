@@ -9,6 +9,7 @@ project(OrderBook)
 set(SOURCE_FILES
 	src/Order.cpp
 	src/OrderBook.cpp
+	src/LockFreeFIFO.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/main.cpp)
@@ -28,6 +29,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 set(TEST_FILES
 	tests/test_main.cpp
+	tests/test_lockfree_fifo.cpp
 )
 
 set(TEST_NAME OrderBookTests)
@@ -37,6 +39,9 @@ target_link_libraries(
   OrderBookTests
   GTest::gtest_main
 )
+
+target_compile_options(OrderBookTests PRIVATE -fsanitize=address)
+target_link_options(OrderBookTests PRIVATE -fsanitize=address)
 
 target_include_directories(${TEST_NAME} PRIVATE src/)
 

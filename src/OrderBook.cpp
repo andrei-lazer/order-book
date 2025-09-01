@@ -2,6 +2,8 @@
 #include "Order.hpp"
 #include <algorithm>
 
+OrderBook::OrderBook() : level_loop{2048uz} {}
+
 TradeVec OrderBook::placeOrder(OrderPtr order)
 {
 	TradeVec trades;
@@ -26,6 +28,8 @@ TradeVec OrderBook::placeOrder(OrderPtr order)
 
 	Entry entry = {order, position};
 	m_orders.insert({order->getOrderId(), entry});
+
+	// adding to the 
 
 	trades = matchOrders();
 	return trades;

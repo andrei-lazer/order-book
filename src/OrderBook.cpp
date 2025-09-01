@@ -9,7 +9,6 @@ TradeVec OrderBook::placeOrder(OrderPtr order)
 		return trades;
 
 	OrderPtrList::iterator position;
-	// OrderPtrList& orders;
 	OrderPtrList* p_orders;
 
 	if (order->getSide() == Side::Bid)
@@ -157,6 +156,7 @@ void OrderBook::deleteOrder(OrderId orderId)
 
 void OrderBook::modifyOrder(OrderId orderId, Price newPrice, Quantity newQuantity, Side newSide)
 {
+	return;
 	if (!m_orders.contains(orderId))
 		return;
 	

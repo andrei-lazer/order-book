@@ -1,8 +1,6 @@
-#include <iostream>
-#include <memory>
-#include "OrderBook.hpp"
+#include "benchmark.cpp"
 
 int main()
 {
-	std::cout << "Hello world" << std::endl;
+	benchmark(1e6);
 }

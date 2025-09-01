@@ -1,8 +1,6 @@
 #include <iostream>
-#include <memory>
-#include "OrderBook.hpp"
 
 int main()
 {
-	std::cout << "Hello world" << std::endl;
+	std::cout << "Hello World" << std::endl;
 }

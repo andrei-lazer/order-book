@@ -1,6 +1,6 @@
 # 📈 Order Book Matching Engine
 
-This is a price-time priority order book implemented in C++.
+This is a price-time priority limit order book implemented in C++.
 
 ## 🚀 Features
 - Add and delete 'Good till Cancelled' orders.

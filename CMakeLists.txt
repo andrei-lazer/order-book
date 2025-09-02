@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_BUILD_TYPE Debug)
 
-project(OrderBook)
+project(Benchmark)
 set(SOURCE_FILES
 	src/Order.cpp
 	src/OrderBook.cpp
@@ -32,16 +32,16 @@ set(TEST_FILES
 	tests/test_lockfree_fifo.cpp
 )
 
-set(TEST_NAME OrderBookTests)
+set(TEST_NAME Tests)
 add_executable(${TEST_NAME} ${TEST_FILES} ${SOURCE_FILES})
 
 target_link_libraries(
-  OrderBookTests
+  Tests
   GTest::gtest_main
 )
 
-target_compile_options(OrderBookTests PRIVATE -fsanitize=address)
-target_link_options(OrderBookTests PRIVATE -fsanitize=address)
+target_compile_options(Tests PRIVATE -fsanitize=address)
+target_link_options(Tests PRIVATE -fsanitize=address)
 
 target_include_directories(${TEST_NAME} PRIVATE src/)
 

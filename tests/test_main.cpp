@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <ios>
 #include <memory>
 // #include "../src/Order.hpp"
 // #include "../src/Order.cpp"
@@ -14,14 +15,15 @@ TEST(OBTest, SimpleBid) {
 
 	ob.placeOrder(order_sp);
 
-	OrderBookLevels levels = ob.getLevels();
+	// getting information
+	Event e;
+	ob.popEvent(e);
 
-	LevelVec bid_levels = levels.getBids();
-
-	Price bid_price = bid_levels.at(0).m_price;
-	Quantity bid_quantity = bid_levels.at(0).m_quantity;
-
-	EXPECT_EQ(bid_price, 12);
+	EXPECT_EQ(e.m_type, EventType::Add);
+	EXPECT_EQ(e.mp_order, order_sp);
+	EXPECT_EQ(e.mp_match, nullptr);
+	EXPECT_EQ(e.m_price, 12);
+	EXPECT_EQ(e.m_quantity, 1);
 }
 
 TEST(OBTest, SimpleAsk) {
@@ -32,86 +34,116 @@ TEST(OBTest, SimpleAsk) {
 
 	ob.placeOrder(order_sp);
 
-	OrderBookLevels levels = ob.getLevels();
+	// getting information
+	Event e;
+	ob.popEvent(e);
 
-	LevelVec ask_levels = levels.getAsks();
-
-	Price ask_price = ask_levels.at(0).m_price;
-	Quantity ask_quantity = ask_levels.at(0).m_quantity;
-
-	EXPECT_EQ(ask_price, 12);
+	EXPECT_EQ(e.m_type, EventType::Add);
+	EXPECT_EQ(e.mp_order, order_sp);
+	EXPECT_EQ(e.mp_match, nullptr);
+	EXPECT_EQ(e.m_price, 12);
+	EXPECT_EQ(e.m_quantity, 1);
 }
-
 
 TEST(OBTest, UnmatchedOrder)
 {
 	OrderBook ob;
 
-	// place ask at 12
-	Order ask(1, Side::Ask, 14, 1, OrderType::Limit);
+	Order ask(1, Side::Ask, 13, 1, OrderType::Limit);
 	std::shared_ptr<Order> ask_sp = std::make_shared<Order>(ask);
-
 	ob.placeOrder(ask_sp);
 
-	OrderBookLevels levels1 = ob.getLevels();
-	EXPECT_EQ(levels1.getAsks().size(), 1);
-
-	// place bid at 13
-	Order bid(2, Side::Bid, 13, 1, OrderType::Limit);
+	Order bid(2, Side::Bid, 12, 1, OrderType::Limit);
 	std::shared_ptr<Order> bid_sp = std::make_shared<Order>(bid);
+	ob.placeOrder(bid_sp);
 
-	TradeVec trades = ob.placeOrder(bid_sp);
-	OrderBookLevels levels = ob.getLevels();
+	// getting information
+	Event ask_event;
+	Event bid_event;
 
-	EXPECT_EQ(levels.getAsks().size(), 1);
-	EXPECT_EQ(levels.getBids().size(), 1);
+	EXPECT_TRUE(ob.popEvent(ask_event));
+	EXPECT_TRUE(ob.popEvent(bid_event));
 
-	// tradevec should also have 0 trades
-	EXPECT_EQ(trades.size(), 0);
+	EXPECT_EQ(ask_event.m_type, EventType::Add);
+	EXPECT_EQ(ask_event.mp_order, ask_sp);
+	EXPECT_EQ(ask_event.mp_match, nullptr);
+	EXPECT_EQ(ask_event.m_price, 13);
+	EXPECT_EQ(ask_event.m_quantity, 1);
+
+
+	EXPECT_EQ(bid_event.m_type, EventType::Add);
+	EXPECT_EQ(bid_event.mp_order, bid_sp);
+	EXPECT_EQ(bid_event.mp_match, nullptr);
+	EXPECT_EQ(bid_event.m_price, 12);
+	EXPECT_EQ(bid_event.m_quantity, 1);
 }
 
 TEST(OBTest, MatchedOrder)
 {
 	OrderBook ob;
 
-	// place ask at 12
-	Order ask(1, Side::Ask, 12, 1, OrderType::Limit);
+	Order ask(1, Side::Ask, 11, 1, OrderType::Limit);
 	std::shared_ptr<Order> ask_sp = std::make_shared<Order>(ask);
-
 	ob.placeOrder(ask_sp);
 
-	OrderBookLevels levels1 = ob.getLevels();
-	EXPECT_EQ(levels1.getAsks().size(), 1);
-
-	// place bid at 13
-	Order bid(2, Side::Bid, 13, 1, OrderType::Limit);
+	Order bid(2, Side::Bid, 12, 1, OrderType::Limit);
 	std::shared_ptr<Order> bid_sp = std::make_shared<Order>(bid);
+	ob.placeOrder(bid_sp);
 
-	TradeVec trades = ob.placeOrder(bid_sp);
+	// getting information
+	Event ask_event;
+	Event bid_event;
+	Event match_event;
 
-	OrderBookLevels levels = ob.getLevels();
+	EXPECT_TRUE(ob.popEvent(ask_event));
+	EXPECT_TRUE(ob.popEvent(bid_event));
+	EXPECT_TRUE(ob.popEvent(match_event));
 
-	EXPECT_EQ(levels.getAsks().size(), 0);
-	EXPECT_EQ(levels.getBids().size(), 0);
+	EXPECT_EQ(ask_event.m_type, EventType::Add);
+	EXPECT_EQ(ask_event.mp_order, ask_sp);
+	EXPECT_EQ(ask_event.mp_match, nullptr);
+	EXPECT_EQ(ask_event.m_price, 11);
+	EXPECT_EQ(ask_event.m_quantity, 1);
 
-	// tradevec should also have 1 trade recorded w quantity 1!
-	EXPECT_EQ(trades.size(), 1);
-	EXPECT_EQ(trades.at(0).getQuantity(), 1);
+	EXPECT_EQ(bid_event.m_type, EventType::Add);
+	EXPECT_EQ(bid_event.mp_order, bid_sp);
+	EXPECT_EQ(bid_event.mp_match, nullptr);
+	EXPECT_EQ(bid_event.m_price, 12);
+	EXPECT_EQ(bid_event.m_quantity, 1);
+
+	EXPECT_EQ(match_event.m_type, EventType::Match);
+	EXPECT_EQ(match_event.mp_order, bid_sp);
+	EXPECT_EQ(match_event.mp_match, ask_sp);
+	EXPECT_EQ(match_event.m_price, 11);
+	EXPECT_EQ(match_event.m_quantity, 1);
 }
 
 TEST(OBTest, DeletedAsk)
 {
 	OrderBook ob;
 
-	// place ask at 12
-	Order ask(1, Side::Ask, 12, 1, OrderType::Limit);
+	Order ask(1, Side::Ask, 11, 1, OrderType::Limit);
 	std::shared_ptr<Order> ask_sp = std::make_shared<Order>(ask);
-
 	ob.placeOrder(ask_sp);
 
-	EXPECT_EQ(ob.getLevels().getAsks().size(), 1);
+	ob.cancelOrder(1);
 
-	ob.deleteOrder(1);
+	// getting information
+	Event ask_event;
+	Event cancel_event;
 
-	EXPECT_EQ(ob.getLevels().getAsks().size(), 0);
+	EXPECT_TRUE(ob.popEvent(ask_event));
+	EXPECT_TRUE(ob.popEvent(cancel_event));
+
+	EXPECT_EQ(ask_event.m_type, EventType::Add);
+	EXPECT_EQ(ask_event.mp_order, ask_sp);
+	EXPECT_EQ(ask_event.mp_match, nullptr);
+	EXPECT_EQ(ask_event.m_price, 11);
+	EXPECT_EQ(ask_event.m_quantity, 1);
+
+	EXPECT_EQ(cancel_event.m_type, EventType::Cancel);
+	EXPECT_EQ(cancel_event.mp_order, ask_sp);
+	EXPECT_EQ(cancel_event.mp_match, nullptr);
+	EXPECT_EQ(cancel_event.m_price, 11);
+	EXPECT_EQ(cancel_event.m_quantity, 1);
 }

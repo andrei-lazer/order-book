@@ -25,15 +25,15 @@ class OrderBook
 	// unordered map to have easy access to orders by ID
 	std::unordered_map<OrderId, Entry> m_orders;
 	
-	LockFreeFIFO<Event> level_loop;
+	LockFreeFIFO<Event> m_event_queue;
 
-	TradeVec matchOrders();
-	void deleteLevelIfEmpty(Level level);
+	void matchOrders();
 
 public:
 	OrderBook();
-	TradeVec placeOrder(OrderPtr order);
-	void deleteOrder(OrderId orderId);
+	void placeOrder(OrderPtr order);
+	void cancelOrder(OrderId orderId);
 	void modifyOrder(OrderId orderId, Price newPrice, Quantity newQuantity, Side newSide);
-	OrderBookLevels getLevels() const;
+
+	bool popEvent(Event& event);
 };

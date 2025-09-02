@@ -2,13 +2,12 @@
 #include "Order.hpp"
 #include <algorithm>
 
-OrderBook::OrderBook() : level_loop{2048uz} {}
+OrderBook::OrderBook() : m_event_queue{2048} {}
 
-TradeVec OrderBook::placeOrder(OrderPtr order)
+void OrderBook::placeOrder(OrderPtr order)
 {
-	TradeVec trades;
 	if (m_orders.contains(order->getOrderId()))
-		return trades;
+		return;
 
 	OrderPtrList::iterator position;
 	OrderPtrList* p_orders;
@@ -29,16 +28,21 @@ TradeVec OrderBook::placeOrder(OrderPtr order)
 	Entry entry = {order, position};
 	m_orders.insert({order->getOrderId(), entry});
 
-	// adding to the 
+	// adding to the event queue
+	Event event(
+		EventType::Add,
+		order,
+		nullptr,
+		order->getPrice(),
+		order->getQuantity()
+	);
+	m_event_queue.push(event);
 
-	trades = matchOrders();
-	return trades;
+	matchOrders();
 }
 
-TradeVec OrderBook::matchOrders()
+void OrderBook::matchOrders()
 {
-	TradeVec trades;
-
 	while (!m_bids.empty() && !m_asks.empty())
 	{
 		auto& [bid_price, bids] = *m_bids.begin();
@@ -48,17 +52,23 @@ TradeVec OrderBook::matchOrders()
 		{
 			while (!bids.empty() && !asks.empty())
 			{
-				OrderPtr& bid = bids.front();
-				OrderPtr& ask = asks.front();
+				OrderPtr bid = bids.front();
+				OrderPtr ask = asks.front();
 
 				Quantity quantity = std::min(bid->getQuantity(), ask->getQuantity());
 
 				bid->fill(quantity);
 				ask->fill(quantity);
 
-				// record the trade
-				Trade t(bid, ask, quantity);
-				trades.push_back(t);
+				// TODO record the trade
+				Event event(
+					EventType::Match,
+					bid,
+					ask,
+					ask->getPrice(), // orders happen at ask price
+					quantity
+				);
+				m_event_queue.push(event);
 
 				// remove entire order if fulfilled
 				if (bid->isEmpty())
@@ -89,46 +99,9 @@ TradeVec OrderBook::matchOrders()
 			m_asks.erase(ask_price);
 		}
 	}
-
-	return trades;
 }
 
-OrderBookLevels OrderBook::getLevels() const
-{
-	LevelVec bid_levels;
-	bid_levels.reserve(m_bids.size());
-
-	LevelVec ask_levels;
-	ask_levels.reserve(m_asks.size());
-
-	for (auto& [price, orders] : m_bids)
-	{
-		// creating a level info per price
-		Quantity quantity = 0;
-		// not sure of the time complexity of this,
-		// since retrieval from a list is O(n),
-		// but ":" iteration might be different
-		for (OrderPtr op : orders)
-		{
-			quantity += op->getQuantity();
-		}
-		bid_levels.push_back({price, quantity});
-	}
-
-	for (auto& [price, orders] : m_asks)
-	{
-		Quantity quantity = 0;
-		for (OrderPtr op : orders)
-		{
-			quantity += op->getQuantity();
-		}
-		ask_levels.push_back({price, quantity});
-	}
-
-	return OrderBookLevels{bid_levels, ask_levels};
-}
-
-void OrderBook::deleteOrder(OrderId orderId)
+void OrderBook::cancelOrder(OrderId orderId)
 {
 	if (!m_orders.contains(orderId))
 	{
@@ -155,6 +128,16 @@ void OrderBook::deleteOrder(OrderId orderId)
 			m_asks.erase(price);
 	}
 
+	Event event(
+		EventType::Cancel,
+		p_order,
+		nullptr,
+		p_order->getPrice(),
+		p_order->getQuantity()
+		);
+
+	m_event_queue.push(event);
+
 	m_orders.erase(orderId);
 }
 
@@ -175,6 +158,11 @@ void OrderBook::modifyOrder(OrderId orderId, Price newPrice, Quantity newQuantit
 		(newSide != side) ||
 		(newQuantity > quantity))
 	{
-		deleteOrder(orderId);
+		cancelOrder(orderId);
 	}
+}
+
+bool OrderBook::popEvent(Event& event)
+{
+	return m_event_queue.pop(event);
 }

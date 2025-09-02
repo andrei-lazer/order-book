@@ -5,8 +5,6 @@
 template <typename T>
 LockFreeFIFO<T>::LockFreeFIFO(size_t capacity)
 	: m_capacity(capacity),
-	  m_back(0),
-	  m_front(0),
 	  m_data(new T[capacity])
 {}
 
@@ -15,6 +13,12 @@ template <typename T>
 LockFreeFIFO<T>::~LockFreeFIFO()
 {
 	delete[] m_data;
+}
+
+template <typename T>
+size_t LockFreeFIFO<T>::size() const
+{
+	return m_front - m_back;
 }
 
 template <typename T>

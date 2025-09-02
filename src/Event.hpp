@@ -1,10 +1,12 @@
 #include "Order.hpp"
 
+enum class EventType {Add, Cancel, Match};
+
 struct Event
 {
-	enum class Type {Add, Cancel, Match};
-	OrderId order_id;
-	Side side;
-	Price price;
-	Quantity quantity;
+	EventType m_type;
+	OrderPtr mp_order;
+	OrderPtr mp_match; // for matches - null if not a match
+	Price m_price;
+	Quantity m_quantity;
 };

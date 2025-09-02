@@ -1,15 +1,17 @@
 # 📈 Order Book Matching Engine
 
-This is a price-time priority order book implemented in C++.
+This is a price-time priority limit order book implemented in C++.
 
 ## 🚀 Features
-- Add and delete 'Good till Cancelled' orders.
-- In-built matching engine.
-- Depth information API.
-- Unit testing with Google Test
+- Add, Cancel and Match events are published to a lock-free ring buffer, enabling non-blocking
+  queries.
+- Unit testing with Google Test.
+- Benchmarking obtained rates of up to *580,000 orders/second* including matches and concurrent
+  querying.
+
+## Benchmark Demo
 
 ## 📒 To-Do
-- Concurrency support
 - Market orders
 
 ## Building details

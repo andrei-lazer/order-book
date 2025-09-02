@@ -29,21 +29,35 @@ double sd(std::vector<double>& data, double mean)
 	return std::sqrt(var);
 }
 
-void benchmark(size_t N) {
-    OrderBook ob;
+void query(OrderBook& ob, size_t n_iter)
+{
+	// queries the order book (should be ran on another thread)
+	Event event;
+
+	Quantity total_quantity = 0;
+	for (size_t i = 0; i < n_iter; i++)
+	{
+		if (ob.popEvent(event))
+			total_quantity += event.m_quantity;
+	}
+
+	std::cout << "Total quantity queried: " << total_quantity << std::endl;
+}
+
+void benchmark(OrderBook& ob, size_t n_iter) {
     std::vector<int> order_ids;
-    order_ids.reserve(N);
+    order_ids.reserve(n_iter);
 
     std::vector<double> add_latencies, cancel_latencies;
-    add_latencies.reserve(N);
-    cancel_latencies.reserve(N/2);
+    add_latencies.reserve(n_iter);
+    cancel_latencies.reserve(n_iter/2);
 
     std::mt19937 rng(42);
     std::uniform_real_distribution<> price_dist(90, 110);
     std::uniform_int_distribution<int> qty_dist(1, 100);
 
     // Benchmark add orders
-    for (size_t i = 0; i < N; i++) {
+    for (size_t i = 0; i < n_iter; i++) {
         auto side = (i % 2 == 0 ? Side::Bid : Side::Ask);
         int price = price_dist(rng);
         int qty = qty_dist(rng);
@@ -60,9 +74,9 @@ void benchmark(size_t N) {
     }
 
     // Benchmark cancels (cancel half of them)
-    for (size_t i = 0; i < N/2; i++) {
+    for (size_t i = 0; i < n_iter/2; i++) {
         auto start = std::chrono::high_resolution_clock::now();
-        ob.deleteOrder(order_ids[i]);
+        ob.cancelOrder(order_ids[i]);
         auto end = std::chrono::high_resolution_clock::now();
 
         std::chrono::duration<double, std::nano> dur = end - start;
@@ -75,14 +89,11 @@ void benchmark(size_t N) {
         double p99 = percentile(latencies, 0.99);
         double p999 = percentile(latencies, 0.999);
 		double _sd  = sd(latencies, mean);
-        std::cout << name << " Latency (ns): mean=" << mean
-				  << " standard deviation: " << _sd
-                  << " p50=" << p50 << " p99=" << p99 << " p999=" << p999 << std::endl;
+        std::cout << name  << "\n" << 1e9/mean <<  " iterations/second\nLatency (ns):\n\tmean=" << mean
+				  << "\n\tstandard deviation: " << _sd
+                  << "\n\tp50=" << p50 << "\n\tp99=" << p99 << std::endl << std::endl;
     };
 
-	std::vector<double> test_vec = {0.0, 1.0, 2.0, 3.0};
-	std::cout << "Test sd: " << sd(test_vec, 1.5) << std::endl;
-    report("Add", add_latencies);
-    report("Cancel", cancel_latencies);
+    report("ADD", add_latencies);
+    report("CANCEL", cancel_latencies);
 }
-

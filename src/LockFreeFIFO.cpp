@@ -8,7 +8,6 @@ LockFreeFIFO<T>::LockFreeFIFO(size_t capacity)
 	  m_data(new T[capacity])
 {}
 
-
 template <typename T>
 LockFreeFIFO<T>::~LockFreeFIFO()
 {
@@ -36,7 +35,6 @@ bool LockFreeFIFO<T>::full() const
 	}
 	return m_front % m_capacity == m_back;
 }
-
 
 template <typename T>
 bool LockFreeFIFO<T>::push(const T& value)

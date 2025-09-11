@@ -7,7 +7,6 @@
 #include "Order.hpp"
 #include "OrderBook.hpp"
 
-// Utility: calculate percentile
 double percentile(std::vector<double>& data, double p) {
     if (data.empty()) return 0.0;
     std::sort(data.begin(), data.end());
@@ -15,6 +14,7 @@ double percentile(std::vector<double>& data, double p) {
     if (idx >= data.size()) idx = data.size() - 1;
     return data[idx];
 }
+
 
 double sd(std::vector<double>& data, double mean)
 {
@@ -29,19 +29,39 @@ double sd(std::vector<double>& data, double mean)
 	return std::sqrt(var);
 }
 
+auto report = [](const std::string& name, std::vector<double>& latencies) {
+	double mean = std::accumulate(latencies.begin(), latencies.end(), 0.0) / latencies.size();
+	double p50 = percentile(latencies, 0.50);
+	double p99 = percentile(latencies, 0.99);
+	double p999 = percentile(latencies, 0.999);
+	double _sd  = sd(latencies, mean);
+	std::cout << name  << "\n" << 1e9/mean <<  " iterations/second\nLatency (ns):\n\tmean=" << mean
+			  << "\n\tstandard deviation: " << _sd
+			  << "\n\tp50=" << p50 << "\n\tp99=" << p99 << std::endl << std::endl;
+};
+
 void query(OrderBook& ob, size_t n_iter)
 {
 	// queries the order book (should be ran on another thread)
 	Event event;
 
-	Quantity total_quantity = 0;
+	std::vector<double> latencies;
+	latencies.reserve(n_iter);
+	bool worked;
 	for (size_t i = 0; i < n_iter; i++)
 	{
-		if (ob.popEvent(event))
-			total_quantity += event.m_quantity;
+		auto start = std::chrono::high_resolution_clock::now();
+		worked = ob.popEvent(event);
+		auto end = std::chrono::high_resolution_clock::now();
+
+		if (worked)
+		{
+			std::chrono::duration<double, std::nano> dur = end - start;
+			latencies.push_back(dur.count());
+		}
 	}
 
-	std::cout << "Total quantity queried: " << total_quantity << std::endl;
+	report("SUCCESSFUL QUERY", latencies);
 }
 
 void benchmark(OrderBook& ob, size_t n_iter) {
@@ -82,17 +102,6 @@ void benchmark(OrderBook& ob, size_t n_iter) {
         std::chrono::duration<double, std::nano> dur = end - start;
         cancel_latencies.push_back(dur.count());
     }
-
-    auto report = [](const std::string& name, std::vector<double>& latencies) {
-        double mean = std::accumulate(latencies.begin(), latencies.end(), 0.0) / latencies.size();
-        double p50 = percentile(latencies, 0.50);
-        double p99 = percentile(latencies, 0.99);
-        double p999 = percentile(latencies, 0.999);
-		double _sd  = sd(latencies, mean);
-        std::cout << name  << "\n" << 1e9/mean <<  " iterations/second\nLatency (ns):\n\tmean=" << mean
-				  << "\n\tstandard deviation: " << _sd
-                  << "\n\tp50=" << p50 << "\n\tp99=" << p99 << std::endl << std::endl;
-    };
 
     report("ADD", add_latencies);
     report("CANCEL", cancel_latencies);

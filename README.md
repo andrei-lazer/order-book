@@ -15,22 +15,29 @@ Running the benchmarker gives the following output on my machine:
 
 ```
 ADD
-530627 iterations/second
+530842 iterations/second
 Latency (ns):
-	mean=1884.56
-	standard deviation: 2387.76
-	p50=1208
-	p99=5434
+	mean=1883.8
+	standard deviation: 2592.94
+	p50=1207
+	p99=5635
 
 CANCEL
-3.86685e+06 iterations/second
+3.69322e+06 iterations/second
 Latency (ns):
-	mean=258.609
-	standard deviation: 462.762
+	mean=270.767
+	standard deviation: 615.866
 	p50=101
 	p99=1107
 
-Total quantity queried: 7572610
+SUCCESSFUL QUERY
+4.6153e+06 iterations/second
+Latency (ns):
+	mean=216.67
+	standard deviation: 760.624
+	p50=201
+	p99=302
+
 ```
 
 ## Build

@@ -1,49 +1,33 @@
 cmake_minimum_required(VERSION 3.28)
 
+project(OrderBookProject LANGUAGES CXX)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_BUILD_TYPE Debug)
+# default build type
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
 
-project(Benchmark)
-set(SOURCE_FILES
-	src/Order.cpp
-	src/OrderBook.cpp
-	src/LockFreeFIFO.cpp
+option(BUILD_TESTS "Build tests using GoogleTest" OFF)
+
+# Core library
+add_library(
+	OrderBookLib
+	STATIC
+		src/Order.cpp
+		src/OrderBook.cpp
+		src/LockFreeFIFO.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/main.cpp)
+target_include_directories(OrderBookLib PUBLIC src)
 
-# testing using Google Test
+add_executable(Benchmark src/main.cpp)
+target_link_libraries(Benchmark PRIVATE OrderBookLib)
 
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/eb2d85edd0bff7a712b6aff147cd9f789f0d7d0b.zip
-
-)
-
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-enable_testing()
-set(TEST_FILES
-	tests/test_main.cpp
-	tests/test_lockfree_fifo.cpp
-)
-
-set(TEST_NAME Tests)
-add_executable(${TEST_NAME} ${TEST_FILES} ${SOURCE_FILES})
-
-target_link_libraries(
-  Tests
-  GTest::gtest_main
-)
-
-target_compile_options(Tests PRIVATE -fsanitize=address)
-target_link_options(Tests PRIVATE -fsanitize=address)
-
-target_include_directories(${TEST_NAME} PRIVATE src/)
-
-include(GoogleTest)
-gtest_discover_tests(${TEST_NAME})
+# Tests only built if requested
+if(BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()

@@ -45,11 +45,18 @@ Latency (ns):
 - `cmake`
 - C++23
 
-#### Steps
+#### Build benchmarker only
 1. clone this repository
 2. `cd order-book`
 3. `cmake -B build`
 4. `cmake --build build --parallel`
 
-Then, running `build/Benchmark` will run the benchmarker,
-and `build/Tests` will run the unit tests.
+Then, running `build/Benchmark` will run the benchmarker.
+
+#### Build benchmarker AND unit tests.
+1. Steps 1 and 2 are the same.
+2. `cmake -B build -DBUILD_TESTS=ON`
+3. `cmake --build build --parallel`
+
+Then, running `build/Benchmark` will run the benchmarker, and `ctest --test-dir build` will run the
+unit tests.

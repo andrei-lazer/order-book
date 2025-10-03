@@ -11,11 +11,50 @@ class LockFreeFIFO
 
 	static_assert(std::atomic<size_t>::is_always_lock_free);
 public:
-	LockFreeFIFO(size_t capacity);
-	~LockFreeFIFO();
-	size_t size() const;
-	bool empty() const;
-	bool full() const;
-	bool push(const T& value);
-	bool pop(T& value_to_replace);
+	LockFreeFIFO(size_t capacity)
+		: m_capacity(capacity)
+		, m_data(new T[capacity]) {}
+
+	size_t size() const
+	{
+		return m_front - m_back;
+	}
+
+	bool empty() const
+	{
+		return m_back == m_front;
+	}
+
+	bool full() const
+	{
+		if (empty())
+		{
+			return false;
+		}
+		return m_front % m_capacity == m_back;
+	}
+	
+	bool push(const T& value)
+	{
+		if (full())
+		{
+			return false;
+		}
+
+		m_data[m_front % m_capacity] = value;
+		++m_front;
+		return true;
+	}
+
+	bool pop(T& value_to_replace)
+	{
+		if (empty())
+		{
+			return false;
+		}
+
+		value_to_replace = m_data[m_back % m_capacity];
+		++m_back;
+		return true;
+	}
 };

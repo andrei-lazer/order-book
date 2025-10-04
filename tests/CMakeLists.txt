@@ -1,5 +1,3 @@
-project(Tests LANGUAGES CXX)
-
 include(FetchContent)
 FetchContent_Declare(
 	googletest
@@ -18,7 +16,7 @@ add_executable(Tests ${TEST_FILES})
 target_link_libraries(
 	Tests
 	PRIVATE
-		OrderBookLib
+		${PROJECT_NAME}Lib
 		GTest::gtest_main
 )
 
